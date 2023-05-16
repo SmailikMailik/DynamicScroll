@@ -2,51 +2,51 @@
 
 namespace DynamicScroll
 {
-    public class DynamicScrollItem<T> : ScrollItem
-        where T : ScrollItemData
+    public class DynamicScrollItem<T> : DynamicScrollItem
+        where T : DynamicScrollItemData
     {
-        public sealed override void InitItem(int index, Vector2 gridPos, ScrollItemData data)
+        public sealed override void Init(int index, Vector2 gridPos, DynamicScrollItemData data)
         {
             Index = index;
             GridIndex = gridPos;
 
             if (data is T itemData)
-                InitItemData(itemData);
+                OnInit(itemData);
         }
 
-        protected virtual void InitItemData(T data) { }
+        protected virtual void OnInit(T data) { }
     }
 
-    public abstract class ScrollItem : MonoBehaviour
+    public abstract class DynamicScrollItem : MonoBehaviour
     {
         public int Index { get; protected set; }
         public Vector2 GridIndex { get; protected set; }
 
         public RectTransform RectTransform => transform as RectTransform;
 
-        public abstract void InitItem(int index, Vector2 gridPos, ScrollItemData data);
+        public abstract void Init(int index, Vector2 gridPos, DynamicScrollItemData data);
 
-        public void Activated()
+        public void Activate()
         {
             gameObject.SetActive(true);
-            ActivatedCustomActions();
+            OnActivate();
         }
 
-        public void Deactivated()
+        public void Deactivate()
         {
             gameObject.SetActive(false);
-            DeactivatedCustomActions();
+            OnDeactivate();
         }
 
-        protected virtual void ActivatedCustomActions() { }
-        protected virtual void DeactivatedCustomActions() { }
+        protected virtual void OnActivate() { }
+        protected virtual void OnDeactivate() { }
     }
 
-    public class ScrollItemData
+    public class DynamicScrollItemData
     {
         public int Index { get; }
 
-        public ScrollItemData(int index)
+        public DynamicScrollItemData(int index)
         {
             Index = index;
         }

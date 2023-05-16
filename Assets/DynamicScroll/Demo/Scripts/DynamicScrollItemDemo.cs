@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace DynamicScroll.Demo
 {
-    public class DynamicScrollItemDemo : DynamicScrollItem<ScrollItemData>
+    public class DynamicScrollItemDemo : DynamicScrollItem<DynamicScrollItemData>
     {
         [SerializeField] private DynamicScrollRect _dynamicScroll;
         [SerializeField] private TextMeshProUGUI _text;
@@ -13,10 +13,10 @@ namespace DynamicScroll.Demo
             _dynamicScroll.StartFocus(this);
         }
 
-        protected override void InitItemData(ScrollItemData data)
+        protected override void OnInit(DynamicScrollItemData data)
         {
             _text.SetText(data.Index.ToString());
-            base.InitItemData(data);
+            base.OnInit(data);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -28,11 +29,12 @@ namespace DynamicScroll
 
     public class DynamicScrollRect : ScrollRect
     {
+        [SerializeField] private DynamicScrollContent _content;
         [SerializeField] private DynamicScrollRestrictionSettings _restrictionSettings;
         [SerializeField] private FocusSettings _focusSettings;
 
         private Vector2 _contentStartPos = Vector2.zero;
-        private Vector2 _dragStartingPosition = Vector2.zero;
+        private Vector2 _dragStartPosition = Vector2.zero;
         private Vector2 _dragCurPosition = Vector2.zero;
         private Vector2 _lastDragDelta = Vector2.zero;
 
@@ -45,17 +47,9 @@ namespace DynamicScroll
         private bool _needRunBack;
         private bool _isDragging;
 
-        private DynamicScrollContent _content;
-
-        private DynamicScrollContent Content
+        public void Init(List<DynamicScrollItemData> contentData)
         {
-            get
-            {
-                if (_content == null)
-                    _content = GetComponentInChildren<DynamicScrollContent>();
-
-                return _content;
-            }
+            _content.Init(this, contentData);
         }
 
         public void ResetContent()
@@ -65,7 +59,7 @@ namespace DynamicScroll
             content.anchoredPosition = Vector2.zero;
         }
 
-        public void StartFocus(ScrollItem focusItem)
+        public void StartFocus(DynamicScrollItem focusItem)
         {
             StartFocusItemRoutine(focusItem);
         }
@@ -91,9 +85,9 @@ namespace DynamicScroll
                 viewport,
                 eventData.position,
                 eventData.pressEventCamera,
-                out _dragStartingPosition);
+                out _dragStartPosition);
 
-            _dragCurPosition = _dragStartingPosition;
+            _dragCurPosition = _dragStartPosition;
 
             CancelFocus();
         }
@@ -208,27 +202,27 @@ namespace DynamicScroll
             var positiveDelta = delta.y > 0;
 
             var anchoredPositionY = content.anchoredPosition.y;
-            var spacingY = Content.Spacing.y;
-            var itemHeight = Content.ItemHeight;
-            var firstItemPosY = Content.GetFirstItemPos().y;
-            var lastItemPosY = Content.GetLastItemPos().y;
+            var spacingY = _content.Spacing.y;
+            var itemHeight = _content.ItemHeight;
+            var firstItemPosY = _content.GetFirstItemPos().y;
+            var lastItemPosY = _content.GetLastItemPos().y;
             var rectHeight = viewport.rect.height;
 
             if (positiveDelta)
             {
                 if (-lastItemPosY - anchoredPositionY <= rectHeight + spacingY)
-                    Content.AddIntoTail();
+                    _content.AddIntoTail();
 
                 if (anchoredPositionY - -firstItemPosY >= 2 * itemHeight + spacingY)
-                    Content.DeleteFromHead();
+                    _content.DeleteFromHead();
             }
             else
             {
                 if (anchoredPositionY + firstItemPosY <= itemHeight + spacingY)
-                    Content.AddIntoHead();
+                    _content.AddIntoHead();
 
                 if (-lastItemPosY - anchoredPositionY >= rectHeight + itemHeight + spacingY)
-                    Content.DeleteFromTail();
+                    _content.DeleteFromTail();
             }
         }
 
@@ -237,27 +231,27 @@ namespace DynamicScroll
             var positiveDelta = delta.x > 0;
 
             var anchoredPositionX = content.anchoredPosition.x;
-            var spacingX = Content.Spacing.x;
-            var itemWidth = Content.ItemWidth;
-            var firstItemPosX = Content.GetFirstItemPos().x;
-            var lastItemPosX = Content.GetLastItemPos().x;
+            var spacingX = _content.Spacing.x;
+            var itemWidth = _content.ItemWidth;
+            var firstItemPosX = _content.GetFirstItemPos().x;
+            var lastItemPosX = _content.GetLastItemPos().x;
             var rectWidth = viewport.rect.width;
 
             if (positiveDelta)
             {
                 if (firstItemPosX + anchoredPositionX >= -itemWidth - spacingX)
-                    Content.AddIntoHead();
+                    _content.AddIntoHead();
 
                 if (lastItemPosX + anchoredPositionX >= rectWidth + itemWidth + spacingX)
-                    Content.DeleteFromTail();
+                    _content.DeleteFromTail();
             }
             else
             {
                 if (lastItemPosX + anchoredPositionX <= rectWidth + spacingX)
-                    Content.AddIntoTail();
+                    _content.AddIntoTail();
 
                 if (firstItemPosX + anchoredPositionX <= -2 * itemWidth - spacingX)
-                    Content.DeleteFromHead();
+                    _content.DeleteFromHead();
             }
         }
 
@@ -274,18 +268,18 @@ namespace DynamicScroll
 
             if (positiveDelta)
             {
-                var lastItemPos = Content.GetLastItemPos();
+                var lastItemPos = _content.GetLastItemPos();
 
                 // Calculate local position of last item's end position in viewport rect
-                if (!Content.CanAddNewItemIntoTail() &&
-                    content.anchoredPosition.y + viewport.rect.height + lastItemPos.y - Content.ItemHeight > 0)
+                if (!_content.CanAddNewItemIntoTail() &&
+                    content.anchoredPosition.y + viewport.rect.height + lastItemPos.y - _content.ItemHeight > 0)
                 {
                     return false;
                 }
             }
             else
             {
-                if (!Content.CanAddNewItemIntoHead() &&
+                if (!_content.CanAddNewItemIntoHead() &&
                     content.anchoredPosition.y <= 0)
                 {
                     return false;
@@ -301,18 +295,18 @@ namespace DynamicScroll
 
             if (positiveDelta)
             {
-                if (!Content.CanAddNewItemIntoHead() && content.anchoredPosition.x >= 0)
+                if (!_content.CanAddNewItemIntoHead() && content.anchoredPosition.x >= 0)
                 {
                     return false;
                 }
             }
             else
             {
-                var lastItemPos = Content.GetLastItemPos();
+                var lastItemPos = _content.GetLastItemPos();
 
                 // Calculate local position of last item's end position in viewport rect 
-                if (!Content.CanAddNewItemIntoTail() &&
-                    content.anchoredPosition.x + lastItemPos.x <= viewport.rect.width - Content.ItemWidth)
+                if (!_content.CanAddNewItemIntoTail() &&
+                    content.anchoredPosition.x + lastItemPos.x <= viewport.rect.width - _content.ItemWidth)
                 {
                     return false;
                 }
@@ -386,9 +380,9 @@ namespace DynamicScroll
             if (!positiveDelta)
                 return Mathf.Clamp(Mathf.Abs(content.anchoredPosition.y) / maxLimit, 0, 1);
 
-            var lastItemPos = Content.GetLastItemPos();
+            var lastItemPos = _content.GetLastItemPos();
 
-            if (Mathf.Abs(lastItemPos.y) <= viewport.rect.height - Content.ItemHeight)
+            if (Mathf.Abs(lastItemPos.y) <= viewport.rect.height - _content.ItemHeight)
             {
                 var max = lastItemPos.y + maxLimit;
                 var cur = content.anchoredPosition.y + lastItemPos.y;
@@ -398,7 +392,7 @@ namespace DynamicScroll
             }
             else
             {
-                var max = -(viewport.rect.height - maxLimit - Content.ItemHeight);
+                var max = -(viewport.rect.height - maxLimit - _content.ItemHeight);
                 var cur = content.anchoredPosition.y + lastItemPos.y;
                 var diff = max - cur;
 
@@ -414,9 +408,9 @@ namespace DynamicScroll
             if (positiveDelta)
                 return Mathf.Clamp(Mathf.Abs(content.anchoredPosition.x) / maxLimit, 0, 1);
 
-            var lastItemPos = Content.GetLastItemPos();
+            var lastItemPos = _content.GetLastItemPos();
 
-            if (lastItemPos.x <= viewport.rect.width - Content.ItemWidth)
+            if (lastItemPos.x <= viewport.rect.width - _content.ItemWidth)
             {
                 var max = lastItemPos.x - maxLimit;
                 var cur = content.anchoredPosition.x + lastItemPos.x;
@@ -426,7 +420,7 @@ namespace DynamicScroll
             }
             else
             {
-                var max = viewport.rect.width - maxLimit - Content.ItemWidth;
+                var max = viewport.rect.width - maxLimit - _content.ItemWidth;
                 var cur = content.anchoredPosition.x + lastItemPos.x;
                 var diff = cur - max;
 
@@ -441,12 +435,12 @@ namespace DynamicScroll
                 if (content.anchoredPosition.y < 0)
                     return Vector2.zero;
 
-                var lastItemPos = Content.GetLastItemPos();
+                var lastItemPos = _content.GetLastItemPos();
 
-                if (Mathf.Abs(lastItemPos.y) <= viewport.rect.height - Content.ItemHeight)
+                if (Mathf.Abs(lastItemPos.y) <= viewport.rect.height - _content.ItemHeight)
                     return Vector2.zero;
 
-                var target = -(viewport.rect.height - Content.ItemHeight);
+                var target = -(viewport.rect.height - _content.ItemHeight);
                 var cur = content.anchoredPosition.y + lastItemPos.y;
                 var diff = target - cur;
 
@@ -458,12 +452,12 @@ namespace DynamicScroll
                 if (content.anchoredPosition.x > 0)
                     return Vector2.zero;
 
-                var lastItemPos = Content.GetLastItemPos();
+                var lastItemPos = _content.GetLastItemPos();
 
-                if (lastItemPos.x <= viewport.rect.width - Content.ItemWidth)
+                if (lastItemPos.x <= viewport.rect.width - _content.ItemWidth)
                     return Vector2.zero;
 
-                var target = viewport.rect.width - Content.ItemWidth;
+                var target = viewport.rect.width - _content.ItemWidth;
                 var cur = content.anchoredPosition.x + lastItemPos.x;
                 var diff = target - cur;
 
@@ -475,7 +469,7 @@ namespace DynamicScroll
 
         private Vector2 CalculateContentPos(Vector2 localCursor)
         {
-            var dragDelta = localCursor - _dragStartingPosition;
+            var dragDelta = localCursor - _dragStartPosition;
             var position = _contentStartPos + dragDelta;
             return position;
         }
@@ -529,7 +523,7 @@ namespace DynamicScroll
 
         #region Focus
 
-        private Vector2 GetFocusPosition(ScrollItem focusItem)
+        private Vector2 GetFocusPosition(DynamicScrollItem focusItem)
         {
             var contentPos = content.anchoredPosition;
 
@@ -546,17 +540,17 @@ namespace DynamicScroll
 
                 // focus item under the viewport
                 if (viewport.rect.height +
-                    (contentPos.y + focusItem.RectTransform.anchoredPosition.y - Content.ItemHeight) < 0)
+                    (contentPos.y + focusItem.RectTransform.anchoredPosition.y - _content.ItemHeight) < 0)
                 {
                     var diff = -contentPos.y - viewport.rect.height +
-                               -focusItem.RectTransform.anchoredPosition.y + Content.ItemHeight +
+                               -focusItem.RectTransform.anchoredPosition.y + _content.ItemHeight +
                                _focusSettings.FocusOffset;
 
-                    if (Content.AtTheEndOfContent(focusItem))
+                    if (_content.AtTheEndOfContent(focusItem))
                         return CalculateSnapPosition();
 
                     var focusPos = contentPos + new Vector2(0, diff);
-                    var contentMovementLimit = contentPos.y + Content.GetLastItemPos().y - Content.ItemHeight +
+                    var contentMovementLimit = contentPos.y + _content.GetLastItemPos().y - _content.ItemHeight +
                                                viewport.rect.height;
 
                     focusPos.y = Mathf.Max(focusPos.y, contentMovementLimit);
@@ -578,16 +572,16 @@ namespace DynamicScroll
 
                 // focus item at the right of the viewport
                 if (viewport.rect.width +
-                    (-contentPos.x - focusItem.RectTransform.anchoredPosition.x - Content.ItemWidth) < 0)
+                    (-contentPos.x - focusItem.RectTransform.anchoredPosition.x - _content.ItemWidth) < 0)
                 {
                     var diff = -viewport.rect.width + contentPos.x + focusItem.RectTransform.anchoredPosition.x
-                        + Content.ItemWidth - _focusSettings.FocusOffset;
+                        + _content.ItemWidth - _focusSettings.FocusOffset;
 
-                    if (Content.AtTheEndOfContent(focusItem))
+                    if (_content.AtTheEndOfContent(focusItem))
                         return CalculateSnapPosition();
 
                     var focusPos = contentPos + new Vector2(0, diff);
-                    var contentMoveLimit = -contentPos.x - Content.GetLastItemPos().x + Content.ItemWidth +
+                    var contentMoveLimit = -contentPos.x - _content.GetLastItemPos().x + _content.ItemWidth +
                                            -viewport.rect.width;
 
                     focusPos.x = Mathf.Max(focusPos.x, contentMoveLimit);
@@ -599,7 +593,7 @@ namespace DynamicScroll
             return content.anchoredPosition;
         }
 
-        private void StartFocusItemRoutine(ScrollItem scrollItem)
+        private void StartFocusItemRoutine(DynamicScrollItem scrollItem)
         {
             StopFocusItemRoutine();
             _focusRoutine = FocusProgress(GetFocusPosition(scrollItem));

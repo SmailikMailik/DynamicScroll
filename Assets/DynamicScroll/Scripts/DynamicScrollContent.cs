@@ -7,69 +7,41 @@ namespace DynamicScroll
 {
     public class DynamicScrollContent : MonoBehaviour
     {
+        [SerializeField] private DynamicScrollItem _referenceItem;
         [SerializeField] private Vector2 _spacing = Vector2.zero;
-        public Vector2 Spacing => _spacing;
 
         [Tooltip("It will fill content rect in main axis(horizontal or vertical) automatically. Simply ignores _fixedItemCount")]
-        [SerializeField] private bool _fillContent = false;
+        [SerializeField] private bool _fillContent;
 
         [Tooltip("If scroll is vertical it is item count in each row vice versa for horizontal")]
         [Min(1)] [SerializeField] private int _fixedItemCount = 1;
 
-        private DynamicScrollRect _dynamicScrollRect;
+        public Vector2 Spacing => _spacing;
 
-        public DynamicScrollRect DynamicScrollRect
+        public float ItemWidth => _referenceItem.RectTransform.rect.width;
+        public float ItemHeight => _referenceItem.RectTransform.rect.height;
+
+        public Action<DynamicScrollItem> ItemActivated { get; set; }
+        public Action<DynamicScrollItem> ItemDeactivated { get; set; }
+
+        public DynamicScrollRect DynamicScrollRect { get; private set; }
+        public List<DynamicScrollItemData> ContentData { get; private set; }
+
+        private readonly List<DynamicScrollItem> _activatedItems = new();
+        private readonly List<DynamicScrollItem> _deactivatedItems = new();
+
+        public void Init(DynamicScrollRect dynamicScrollRect, List<DynamicScrollItemData> contentData)
         {
-            get
-            {
-                if (_dynamicScrollRect == null)
-                    _dynamicScrollRect = GetComponent<DynamicScrollRect>();
+            DynamicScrollRect = dynamicScrollRect;
+            ContentData = contentData;
 
-                return _dynamicScrollRect;
-            }
+            if (DynamicScrollRect.vertical) InitItemsVertical(contentData);
+            if (DynamicScrollRect.horizontal) InitItemsHorizontal(contentData);
         }
 
-        private ScrollItem _referenceItem;
-
-        private ScrollItem ReferenceItem
+        public void Clear()
         {
-            get
-            {
-                if (_referenceItem == null)
-                {
-                    _referenceItem = GetComponentInChildren<ScrollItem>();
-
-                    if (_referenceItem == null)
-                        throw new Exception(
-                            "No Scroll Item found under scroll rect content.You should create reference scroll item under DynamicScroll Content first.");
-                }
-
-                return _referenceItem;
-            }
-        }
-
-        private readonly List<ScrollItem> _activatedItems = new();
-        private readonly List<ScrollItem> _deactivatedItems = new();
-
-        public List<ScrollItemData> Datum { get; private set; }
-
-        public float ItemWidth => ReferenceItem.RectTransform.rect.width;
-        public float ItemHeight => ReferenceItem.RectTransform.rect.height;
-
-        public Action<ScrollItem> OnItemActivated { get; set; }
-        public Action<ScrollItem> OnItemDeactivated { get; set; }
-
-        public void InitScrollContent(List<ScrollItemData> contentDatum)
-        {
-            Datum = contentDatum;
-
-            if (DynamicScrollRect.vertical) InitItemsVertical(contentDatum);
-            if (DynamicScrollRect.horizontal) InitItemsHorizontal(contentDatum);
-        }
-
-        public void ClearContent()
-        {
-            var activatedItems = new List<ScrollItem>(_activatedItems);
+            var activatedItems = new List<DynamicScrollItem>(_activatedItems);
 
             foreach (var item in activatedItems)
             {
@@ -82,7 +54,7 @@ namespace DynamicScroll
             if (_activatedItems == null || _activatedItems.Count == 0)
                 return false;
 
-            return _activatedItems[^1].Index < Datum.Count - 1;
+            return _activatedItems[^1].Index < ContentData.Count - 1;
         }
 
         public bool CanAddNewItemIntoHead()
@@ -155,7 +127,7 @@ namespace DynamicScroll
             }
         }
 
-        public bool AtTheEndOfContent(ScrollItem item)
+        public bool AtTheEndOfContent(DynamicScrollItem item)
         {
             if (DynamicScrollRect.vertical)
             {
@@ -176,10 +148,10 @@ namespace DynamicScroll
 
         private void Awake()
         {
-            ReferenceItem.gameObject.SetActive(false);
+            _referenceItem.gameObject.SetActive(false);
         }
 
-        private void InitItemsVertical(ICollection contentDatum)
+        private void InitItemsVertical(ICollection contentData)
         {
             var itemCount = 0;
             var initialGridSize = CalculateInitialGridSize();
@@ -188,7 +160,7 @@ namespace DynamicScroll
             {
                 for (var row = 0; row < initialGridSize.x; row++)
                 {
-                    if (itemCount == contentDatum.Count)
+                    if (itemCount == contentData.Count)
                         return;
 
                     ActivateItem(itemCount);
@@ -197,7 +169,7 @@ namespace DynamicScroll
             }
         }
 
-        private void InitItemsHorizontal(ICollection contentDatum)
+        private void InitItemsHorizontal(ICollection contentData)
         {
             var itemCount = 0;
             var initialGridSize = CalculateInitialGridSize();
@@ -206,7 +178,7 @@ namespace DynamicScroll
             {
                 for (var row = 0; row < initialGridSize.x; row++)
                 {
-                    if (itemCount == contentDatum.Count)
+                    if (itemCount == contentData.Count)
                         return;
 
                     ActivateItem(itemCount);
@@ -275,7 +247,7 @@ namespace DynamicScroll
 
             var itemIndex = _activatedItems[^1].Index + 1;
 
-            if (itemIndex == Datum.Count)
+            if (itemIndex == ContentData.Count)
                 return;
 
             ActivateItem(itemIndex);
@@ -294,12 +266,12 @@ namespace DynamicScroll
             ActivateItem(itemIndex);
         }
 
-        private ScrollItem ActivateItem(int itemIndex)
+        private DynamicScrollItem ActivateItem(int itemIndex)
         {
             var gridPos = GetGridPosition(itemIndex);
             var anchoredPos = GetAnchoredPosition(gridPos);
 
-            ScrollItem scrollItem;
+            DynamicScrollItem scrollItem;
 
             if (_deactivatedItems.Count == 0)
             {
@@ -313,7 +285,7 @@ namespace DynamicScroll
 
             scrollItem.gameObject.name = $"{gridPos.x}_{gridPos.y}";
             scrollItem.RectTransform.anchoredPosition = anchoredPos;
-            scrollItem.InitItem(itemIndex, gridPos, Datum[itemIndex]);
+            scrollItem.Init(itemIndex, gridPos, ContentData[itemIndex]);
 
             var insertHead = _activatedItems.Count == 0 ||
                              _activatedItems.Count > 0 && _activatedItems[0].Index > itemIndex;
@@ -323,26 +295,26 @@ namespace DynamicScroll
             else
                 _activatedItems.Add(scrollItem);
 
-            scrollItem.Activated();
-            OnItemActivated?.Invoke(scrollItem);
+            scrollItem.Activate();
+            ItemActivated?.Invoke(scrollItem);
 
             return scrollItem;
         }
 
-        private void DeactivateItem(ScrollItem item)
+        private void DeactivateItem(DynamicScrollItem item)
         {
             _activatedItems.Remove(item);
             _deactivatedItems.Add(item);
 
-            item.Deactivated();
-            OnItemDeactivated?.Invoke(item);
+            item.Deactivate();
+            ItemDeactivated?.Invoke(item);
         }
 
-        private ScrollItem CreateNewScrollItem()
+        private DynamicScrollItem CreateNewScrollItem()
         {
-            var item = Instantiate(ReferenceItem.gameObject, DynamicScrollRect.content);
+            var item = Instantiate(_referenceItem.gameObject, DynamicScrollRect.content);
 
-            var scrollItem = item.GetComponent<ScrollItem>();
+            var scrollItem = item.GetComponent<DynamicScrollItem>();
             scrollItem.RectTransform.pivot = new Vector2(0, 1);
 
             return scrollItem;
