@@ -49,37 +49,17 @@ namespace DynamicScroll
             }
         }
 
-        public bool CanAddNewItemIntoTail()
-        {
-            if (_activatedItems == null || _activatedItems.Count == 0)
-                return false;
+        public bool CanAddNewItemIntoHead() =>
+            HasActivatedItems() && _activatedItems[0].Index - 1 >= 0;
 
-            return _activatedItems[^1].Index < ContentData.Count - 1;
-        }
+        public bool CanAddNewItemIntoTail() =>
+            HasActivatedItems() && _activatedItems[^1].Index < ContentData.Count - 1;
 
-        public bool CanAddNewItemIntoHead()
-        {
-            if (_activatedItems == null || _activatedItems.Count == 0)
-                return false;
+        public Vector2 GetFirstItemPos() =>
+            HasActivatedItems() ? _activatedItems[0].RectTransform.anchoredPosition : Vector2.zero;
 
-            return _activatedItems[0].Index - 1 >= 0;
-        }
-
-        public Vector2 GetFirstItemPos()
-        {
-            if (_activatedItems == null || _activatedItems.Count == 0)
-                return Vector2.zero;
-
-            return _activatedItems[0].RectTransform.anchoredPosition;
-        }
-
-        public Vector2 GetLastItemPos()
-        {
-            if (_activatedItems == null || _activatedItems.Count == 0)
-                return Vector2.zero;
-
-            return _activatedItems[^1].RectTransform.anchoredPosition;
-        }
+        public Vector2 GetLastItemPos() =>
+            HasActivatedItems() ? _activatedItems[^1].RectTransform.anchoredPosition : Vector2.zero;
 
         public void AddIntoHead()
         {
@@ -335,5 +315,7 @@ namespace DynamicScroll
             gridPosition.x * ItemWidth + gridPosition.x * _spacing.x,
             -gridPosition.y * ItemHeight - gridPosition.y * _spacing.y
         );
+
+        private bool HasActivatedItems() => _activatedItems is {Count: > 0};
     }
 }
