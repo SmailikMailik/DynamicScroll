@@ -52,19 +52,3 @@ Scroll rect can make focus easily when entities outside of the viewport. You can
 <p align="center">
     <img src="https://github.com/bugrahanakbulut/Unity-Infinite-Scroll/blob/main/Assets/Resources/scroll_focus.gif" alt="animated" />
 </p>
-   
-    
-    
-## TODO
-
-This project still in under development so there might be some naughty bugs :D. If you met some of them or you need to implement any feature top of it, and if you get stuck please feel free to contact. There are some feature I will be implement in near future :
-    
-- [x] Focus Item :tada:
-- [X] Horizontal Movement Support :tada:
-- [ ] Handling changes in entities (adding, removing etc.) throughout application life-time
-    
-    
-## Contact & Some Additional Notes
-The project is done for educational purpose and may include some files that I do not own. If you own anything and don't want it to be in the project or if you have any questions or comments, please feel free to contact me.
-
-
