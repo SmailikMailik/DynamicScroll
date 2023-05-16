@@ -1,4 +1,4 @@
-﻿namespace DynamicScrollRect
+﻿namespace DynamicScroll
 {
     public class ScrollItemData
     {
