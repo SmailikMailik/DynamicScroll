@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/DynamicScroll/Demo/DynamicScrollDemo.unity
+    path: Assets/DynamicScroll/Demo/Scenes/DynamicScrollHorizontalDemo.unity
+    guid: 915a53e78f84809428a9863661db4604
+  - enabled: 1
+    path: Assets/DynamicScroll/Demo/Scenes/DynamicScrollVerticalDemo.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   m_configObjects: {}
