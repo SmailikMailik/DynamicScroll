@@ -24,17 +24,19 @@ namespace DynamicScrollView
 
         public Vector2 Spacing => _spacing;
 
-        public float ItemWidth => _referenceItem.RectTransform.rect.width;
-        public float ItemHeight => _referenceItem.RectTransform.rect.height;
-
         public Action<DynamicScrollItem> ItemActivated { get; set; }
         public Action<DynamicScrollItem> ItemDeactivated { get; set; }
 
         public DynamicScrollRect DynamicScrollRect { get; private set; }
         public List<DynamicScrollItemData> ContentData { get; private set; }
 
+        public float ItemWidth { get; private set; }
+        public float ItemHeight { get; private set; }
+
         private void Awake()
         {
+            ItemWidth = _referenceItem.RectTransform.rect.width;
+            ItemHeight = _referenceItem.RectTransform.rect.height;
             _referenceItem.gameObject.SetActive(false);
         }
 
