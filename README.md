@@ -1,7 +1,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/bugrahanakbulut/unity-infinite-scroll/badge/main)](https://www.codefactor.io/repository/github/bugrahanakbulut/unity-infinite-scroll/overview/main)
 
-# Unity-Infinite-Scroll
-Unity UI Optimized Scroll Rect to represent large number of entities with less rect transform. Currently only vertical scroll supported. 
+# Dynamic Scroll View
+Unity UI Optimized Scroll Rect to represent large number of entities with less rect transform. 
 
 DynamicScrollRect does not rely any layout group element to keep entities organized. You can use vertical, horizontal or grid orientation without using any built-in layout element.
 
@@ -12,42 +12,41 @@ DynamicScrollRect does not rely any layout group element to keep entities organi
 
 ## For Custom Usage
 
-By inheriting from ScrollItemData and ScrollItem<T> you can create your custom scroll entities. You should be aware of CustomScrollItem inherited from monobehaviour so its' file name and class name must be identical to attach component to game object.
+By inheriting from DynamicScrollItemData and DynamicScrollItem<T> you can create your custom scroll entities. You should be aware of DynamicScrollItem inherited from monobehaviour so its' file name and class name must be identical to attach component to game object.
 
 ```cs
 
-public class CustomScrollItemData : ScrollItemData
+public class CustomDynamicScrollItemData : DynamicScrollItemData
 {
     // Some arbitrary fields and properties
-
-    public CustomScrollItemData(int index) : base(index)
+    public CustomDynamicScrollItemData(int index) : base(index)
     {
         
     }
 }
 
-public class CustomScrollItem : ScrollItem<CustomScrollItemData> 
+public class CustomDynamicScrollItem : DynamicScrollItem<CustomDynamicScrollItemData> 
 {
-    protected override void InitItemData(CustomScrollItemData data)
+    protected override void OnInit(CustomScrollItemData data)
     {
-        base.InitItemData(data);
+        base.OnInit(data);
     }
 
-    protected override void ActivatedCustomActions()
+    protected override void OnActivate()
     {
-        base.ActivatedCustomActions();
+        base.OnActivate();
     }
 
-    protected override void DeactivatedCustomActions()
+    protected override void OnDeactivate()
     {
-        base.DeactivatedCustomActions();
+        base.OnDeactivate();
     }
 }
 ```
     
 ## Focusing Items 
     
-Scroll rect can make focus easily when entities outside of the viewport. You can add offset to focus or determine focus duration from focus settings on DynamicScrollRect component.
+Dynamic scroll rect can make focus easily when entities outside of the viewport. You can add offset to focus or determine focus duration from focus settings on DynamicScrollRect component.
     
 <p align="center">
     <img src="https://github.com/bugrahanakbulut/Unity-Infinite-Scroll/blob/main/Assets/Resources/scroll_focus.gif" alt="animated" />
