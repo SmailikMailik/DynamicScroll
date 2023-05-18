@@ -5,15 +5,15 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace DynamicScroll
+namespace DynamicScrollView
 {
     [Serializable]
     public class DynamicScrollRestrictionSettings
     {
         [SerializeField] private float _contentOverflowRange = 125f;
-        public float ContentOverflowRange => _contentOverflowRange;
 
         [SerializeField] [Range(0, 1)] private float _contentDecelerationInOverflow = 0.5f;
+        public float ContentOverflowRange => _contentOverflowRange;
         public float ContentDecelerationInOverflow => _contentDecelerationInOverflow;
     }
 
@@ -21,9 +21,9 @@ namespace DynamicScroll
     public class FocusSettings
     {
         [SerializeField] private float _focusOffset;
-        public float FocusOffset => _focusOffset;
 
         [SerializeField] private float _focusDuration = 0.25f;
+        public float FocusOffset => _focusOffset;
         public float FocusDuration => _focusDuration;
     }
 
@@ -34,18 +34,32 @@ namespace DynamicScroll
         [SerializeField] private FocusSettings _focusSettings;
 
         private Vector2 _contentStartPos = Vector2.zero;
-        private Vector2 _dragStartPosition = Vector2.zero;
         private Vector2 _dragCurPosition = Vector2.zero;
+        private Vector2 _dragStartPosition = Vector2.zero;
         private Vector2 _lastDragDelta = Vector2.zero;
 
         private IEnumerator _runBackRoutine;
         private IEnumerator _focusRoutine;
 
-        private bool _runBackActive;
-        private bool _isFocusActive;
-
-        private bool _needRunBack;
         private bool _isDragging;
+        private bool _needRunBack;
+
+        private bool _runBackActive;
+        private bool _focusActive;
+
+        protected override void Awake()
+        {
+            movementType = MovementType.Unrestricted;
+            onValueChanged.AddListener(OnScrollRectValueChanged);
+            vertical = !horizontal;
+            base.Awake();
+        }
+
+        protected override void OnDestroy()
+        {
+            onValueChanged.RemoveListener(OnScrollRectValueChanged);
+            base.OnDestroy();
+        }
 
         public void Init(List<DynamicScrollItemData> contentData)
         {
@@ -67,128 +81,6 @@ namespace DynamicScroll
         public void CancelFocus()
         {
             StopFocusItemRoutine();
-        }
-
-        #region Event Callbacks
-
-        public override void OnBeginDrag(PointerEventData eventData)
-        {
-            base.OnBeginDrag(eventData);
-
-            StopRunBackRoutine();
-
-            _isDragging = true;
-
-            _contentStartPos = content.anchoredPosition;
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                viewport,
-                eventData.position,
-                eventData.pressEventCamera,
-                out _dragStartPosition);
-
-            _dragCurPosition = _dragStartPosition;
-
-            CancelFocus();
-        }
-
-        public override void OnDrag(PointerEventData eventData)
-        {
-            if (!_isDragging)
-                return;
-
-            if (eventData.button != PointerEventData.InputButton.Left)
-                return;
-
-            if (!IsActive())
-                return;
-
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                viewRect,
-                eventData.position,
-                eventData.pressEventCamera, out var localCursor))
-            {
-                return;
-            }
-
-            StopRunBackRoutine();
-
-            if (!IsDragValid(localCursor - _dragCurPosition))
-            {
-                var restrictedPos = GetRestrictedContentPositionOnDrag(eventData);
-
-                _needRunBack = true;
-
-                SetContentAnchoredPosition(restrictedPos);
-
-                return;
-            }
-
-            UpdateBounds();
-
-            _needRunBack = false;
-
-            _lastDragDelta = localCursor - _dragCurPosition;
-
-            _dragCurPosition = localCursor;
-
-            SetContentAnchoredPosition(CalculateContentPos(localCursor));
-
-            UpdateItems(_lastDragDelta);
-        }
-
-        public override void OnEndDrag(PointerEventData eventData)
-        {
-            base.OnEndDrag(eventData);
-
-            _isDragging = false;
-
-            if (_needRunBack)
-            {
-                StopMovement();
-
-                StartRunBackRoutine();
-            }
-        }
-
-        private void OnScrollRectValueChanged(Vector2 val)
-        {
-            if (_runBackActive || _isDragging || _isFocusActive)
-                return;
-
-            var delta = velocity.normalized;
-
-            if (IsDragValid(delta))
-            {
-                UpdateItems(delta);
-                return;
-            }
-
-            var contentPos = GetRestrictedContentPositionOnScroll(delta);
-
-            SetContentAnchoredPosition(contentPos);
-
-            if ((velocity * Time.deltaTime).magnitude < 5)
-            {
-                StopMovement();
-                StartRunBackRoutine();
-            }
-        }
-
-        #endregion
-
-        protected override void Awake()
-        {
-            movementType = MovementType.Unrestricted;
-            onValueChanged.AddListener(OnScrollRectValueChanged);
-            vertical = !horizontal;
-            base.Awake();
-        }
-
-        protected override void OnDestroy()
-        {
-            onValueChanged.RemoveListener(OnScrollRectValueChanged);
-            base.OnDestroy();
         }
 
         private void UpdateItems(Vector2 delta)
@@ -273,17 +165,13 @@ namespace DynamicScroll
                 // Calculate local position of last item's end position in viewport rect
                 if (!_content.CanAddNewItemIntoTail() &&
                     content.anchoredPosition.y + viewport.rect.height + lastItemPos.y - _content.ItemHeight > 0)
-                {
                     return false;
-                }
             }
             else
             {
                 if (!_content.CanAddNewItemIntoHead() &&
                     content.anchoredPosition.y <= 0)
-                {
                     return false;
-                }
             }
 
             return true;
@@ -295,10 +183,7 @@ namespace DynamicScroll
 
             if (positiveDelta)
             {
-                if (!_content.CanAddNewItemIntoHead() && content.anchoredPosition.x >= 0)
-                {
-                    return false;
-                }
+                if (!_content.CanAddNewItemIntoHead() && content.anchoredPosition.x >= 0) return false;
             }
             else
             {
@@ -307,9 +192,7 @@ namespace DynamicScroll
                 // Calculate local position of last item's end position in viewport rect 
                 if (!_content.CanAddNewItemIntoTail() &&
                     content.anchoredPosition.x + lastItemPos.x <= viewport.rect.width - _content.ItemWidth)
-                {
                     return false;
-                }
             }
 
             return true;
@@ -482,6 +365,112 @@ namespace DynamicScroll
             return result;
         }
 
+        #region Event Callbacks
+
+        public override void OnBeginDrag(PointerEventData eventData)
+        {
+            base.OnBeginDrag(eventData);
+
+            StopRunBackRoutine();
+
+            _isDragging = true;
+
+            _contentStartPos = content.anchoredPosition;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                viewport,
+                eventData.position,
+                eventData.pressEventCamera,
+                out _dragStartPosition);
+
+            _dragCurPosition = _dragStartPosition;
+
+            CancelFocus();
+        }
+
+        public override void OnDrag(PointerEventData eventData)
+        {
+            if (!_isDragging)
+                return;
+
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+
+            if (!IsActive())
+                return;
+
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    viewRect,
+                    eventData.position,
+                    eventData.pressEventCamera, out var localCursor))
+                return;
+
+            StopRunBackRoutine();
+
+            if (!IsDragValid(localCursor - _dragCurPosition))
+            {
+                var restrictedPos = GetRestrictedContentPositionOnDrag(eventData);
+
+                _needRunBack = true;
+
+                SetContentAnchoredPosition(restrictedPos);
+
+                return;
+            }
+
+            UpdateBounds();
+
+            _needRunBack = false;
+
+            _lastDragDelta = localCursor - _dragCurPosition;
+
+            _dragCurPosition = localCursor;
+
+            SetContentAnchoredPosition(CalculateContentPos(localCursor));
+
+            UpdateItems(_lastDragDelta);
+        }
+
+        public override void OnEndDrag(PointerEventData eventData)
+        {
+            base.OnEndDrag(eventData);
+
+            _isDragging = false;
+
+            if (_needRunBack)
+            {
+                StopMovement();
+
+                StartRunBackRoutine();
+            }
+        }
+
+        private void OnScrollRectValueChanged(Vector2 val)
+        {
+            if (_runBackActive || _isDragging || _focusActive)
+                return;
+
+            var delta = velocity.normalized;
+
+            if (IsDragValid(delta))
+            {
+                UpdateItems(delta);
+                return;
+            }
+
+            var contentPos = GetRestrictedContentPositionOnScroll(delta);
+
+            SetContentAnchoredPosition(contentPos);
+
+            if ((velocity * Time.deltaTime).magnitude < 5)
+            {
+                StopMovement();
+                StartRunBackRoutine();
+            }
+        }
+
+        #endregion
+
         #region Run Back Routine
 
         private void StartRunBackRoutine()
@@ -521,7 +510,7 @@ namespace DynamicScroll
 
         #endregion
 
-        #region Focus
+        #region Focus Routine
 
         private Vector2 GetFocusPosition(DynamicScrollItem focusItem)
         {
@@ -603,12 +592,12 @@ namespace DynamicScroll
         private void StopFocusItemRoutine()
         {
             if (_focusRoutine != null) StopCoroutine(_focusRoutine);
-            _isFocusActive = false;
+            _focusActive = false;
         }
 
         private IEnumerator FocusProgress(Vector2 focusPos)
         {
-            _isFocusActive = true;
+            _focusActive = true;
 
             float timePassed = 0;
             var startPos = content.anchoredPosition;
@@ -627,7 +616,7 @@ namespace DynamicScroll
             }
 
             SetContentAnchoredPosition(focusPos);
-            _isFocusActive = false;
+            _focusActive = false;
         }
 
         #endregion

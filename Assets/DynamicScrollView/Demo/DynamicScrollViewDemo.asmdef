@@ -1,12 +1,10 @@
 {
-    "name": "DynamicScroll.Editor",
-    "rootNamespace": "",
+    "name": "DynamicScrollViewDemo",
+    "rootNamespace": "DynamicScrollViewDemo",
     "references": [
         "GUID:5ca0439e517d7fa499d3c36b2257679b"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

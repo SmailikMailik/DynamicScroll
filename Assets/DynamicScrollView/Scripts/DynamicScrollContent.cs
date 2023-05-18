@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace DynamicScroll
+namespace DynamicScrollView
 {
     public class DynamicScrollContent : MonoBehaviour
     {
@@ -19,6 +19,9 @@ namespace DynamicScroll
         [Tooltip("Items loaded after last visible row for vertical or column for horizontal")]
         [Min(0)] [SerializeField] private int _extraItemCount;
 
+        private readonly List<DynamicScrollItem> _activatedItems = new();
+        private readonly List<DynamicScrollItem> _deactivatedItems = new();
+
         public Vector2 Spacing => _spacing;
 
         public float ItemWidth => _referenceItem.RectTransform.rect.width;
@@ -30,8 +33,10 @@ namespace DynamicScroll
         public DynamicScrollRect DynamicScrollRect { get; private set; }
         public List<DynamicScrollItemData> ContentData { get; private set; }
 
-        private readonly List<DynamicScrollItem> _activatedItems = new();
-        private readonly List<DynamicScrollItem> _deactivatedItems = new();
+        private void Awake()
+        {
+            _referenceItem.gameObject.SetActive(false);
+        }
 
         public void Init(DynamicScrollRect dynamicScrollRect, List<DynamicScrollItemData> contentData)
         {
@@ -52,17 +57,25 @@ namespace DynamicScroll
             }
         }
 
-        public bool CanAddNewItemIntoHead() =>
-            HasActivatedItems() && _activatedItems[0].Index - 1 >= 0;
+        public bool CanAddNewItemIntoHead()
+        {
+            return HasActivatedItems() && _activatedItems[0].Index - 1 >= 0;
+        }
 
-        public bool CanAddNewItemIntoTail() =>
-            HasActivatedItems() && _activatedItems[^1].Index < ContentData.Count - 1;
+        public bool CanAddNewItemIntoTail()
+        {
+            return HasActivatedItems() && _activatedItems[^1].Index < ContentData.Count - 1;
+        }
 
-        public Vector2 GetFirstItemPos() =>
-            HasActivatedItems() ? _activatedItems[0].RectTransform.anchoredPosition : Vector2.zero;
+        public Vector2 GetFirstItemPos()
+        {
+            return HasActivatedItems() ? _activatedItems[0].RectTransform.anchoredPosition : Vector2.zero;
+        }
 
-        public Vector2 GetLastItemPos() =>
-            HasActivatedItems() ? _activatedItems[^1].RectTransform.anchoredPosition : Vector2.zero;
+        public Vector2 GetLastItemPos()
+        {
+            return HasActivatedItems() ? _activatedItems[^1].RectTransform.anchoredPosition : Vector2.zero;
+        }
 
         public void AddIntoHead()
         {
@@ -127,11 +140,6 @@ namespace DynamicScroll
             }
 
             return false;
-        }
-
-        private void Awake()
-        {
-            _referenceItem.gameObject.SetActive(false);
         }
 
         private void InitItemsVertical(ICollection contentData)
@@ -258,9 +266,7 @@ namespace DynamicScroll
             DynamicScrollItem scrollItem;
 
             if (_deactivatedItems.Count == 0)
-            {
                 scrollItem = CreateNewScrollItem();
-            }
             else
             {
                 scrollItem = _deactivatedItems[0];
@@ -272,7 +278,7 @@ namespace DynamicScroll
             scrollItem.Init(itemIndex, gridPos, ContentData[itemIndex]);
 
             var insertHead = _activatedItems.Count == 0 ||
-                             _activatedItems.Count > 0 && _activatedItems[0].Index > itemIndex;
+                             (_activatedItems.Count > 0 && _activatedItems[0].Index > itemIndex);
 
             if (insertHead)
                 _activatedItems.Insert(0, scrollItem);
@@ -307,19 +313,24 @@ namespace DynamicScroll
         private Vector2 GetGridPosition(int itemIndex)
         {
             var col = itemIndex / _maxItemCount;
-            var row = itemIndex - (col * _maxItemCount);
+            var row = itemIndex - col * _maxItemCount;
 
             if (DynamicScrollRect.vertical) return new Vector2(row, col);
             if (DynamicScrollRect.horizontal) return new Vector2(col, row);
             return Vector2.zero;
         }
 
-        private Vector2 GetAnchoredPosition(Vector2 gridPosition) => new Vector2
-        (
-            gridPosition.x * ItemWidth + gridPosition.x * _spacing.x,
-            -gridPosition.y * ItemHeight - gridPosition.y * _spacing.y
-        );
+        private Vector2 GetAnchoredPosition(Vector2 gridPosition)
+        {
+            return new Vector2(
+                gridPosition.x * ItemWidth + gridPosition.x * _spacing.x,
+                -gridPosition.y * ItemHeight - gridPosition.y * _spacing.y
+            );
+        }
 
-        private bool HasActivatedItems() => _activatedItems is { Count: > 0 };
+        private bool HasActivatedItems()
+        {
+            return _activatedItems is { Count: > 0 };
+        }
     }
 }

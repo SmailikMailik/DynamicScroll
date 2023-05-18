@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using DynamicScrollView;
 using UnityEngine;
 
-namespace DynamicScroll.Demo
+namespace DynamicScrollViewDemo
 {
     public class DynamicScrollDemoSceneUI : MonoBehaviour
     {

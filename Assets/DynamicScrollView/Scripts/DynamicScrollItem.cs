@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace DynamicScroll
+namespace DynamicScrollView
 {
     public class DynamicScrollItem<T> : DynamicScrollItem
         where T : DynamicScrollItemData
@@ -44,11 +44,11 @@ namespace DynamicScroll
 
     public class DynamicScrollItemData
     {
-        public int Index { get; }
-
         public DynamicScrollItemData(int index)
         {
             Index = index;
         }
+
+        public int Index { get; }
     }
 }

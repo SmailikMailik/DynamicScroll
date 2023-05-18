@@ -1,6 +1,6 @@
 {
-    "name": "DynamicScroll",
-    "rootNamespace": "",
+    "name": "DynamicScrollView",
+    "rootNamespace": "DynamicScrollView",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

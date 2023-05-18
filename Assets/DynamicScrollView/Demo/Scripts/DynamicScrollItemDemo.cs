@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using DynamicScrollView;
+using UnityEngine;
 using UnityEngine.UI;
 
-namespace DynamicScroll.Demo
+namespace DynamicScrollViewDemo
 {
     public class DynamicScrollItemDemo : DynamicScrollItem<DynamicScrollItemData>
     {
