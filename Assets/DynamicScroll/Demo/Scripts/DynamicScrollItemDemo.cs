@@ -1,12 +1,12 @@
-﻿using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 namespace DynamicScroll.Demo
 {
     public class DynamicScrollItemDemo : DynamicScrollItem<DynamicScrollItemData>
     {
         [SerializeField] private DynamicScrollRect _dynamicScroll;
-        [SerializeField] private TextMeshProUGUI _text;
+        [SerializeField] private Text _text;
 
         public void FocusOnItem()
         {
@@ -15,7 +15,7 @@ namespace DynamicScroll.Demo
 
         protected override void OnInit(DynamicScrollItemData data)
         {
-            _text.SetText(data.Index.ToString());
+            _text.text = data.Index.ToString();
             base.OnInit(data);
         }
     }
