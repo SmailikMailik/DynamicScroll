@@ -7,8 +7,8 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/DynamicScrollView/Demo/Scenes/DynamicScrollHorizontalDemo.unity
-    guid: 915a53e78f84809428a9863661db4604
+    guid: 5ac77c18659e6054495c25d2f3953a74
   - enabled: 1
     path: Assets/DynamicScrollView/Demo/Scenes/DynamicScrollVerticalDemo.unity
-    guid: 9fc0d4010bbf28b4594072e72b8655ab
+    guid: a4c8798cdb2fbea4f91c64517efdad27
   m_configObjects: {}
