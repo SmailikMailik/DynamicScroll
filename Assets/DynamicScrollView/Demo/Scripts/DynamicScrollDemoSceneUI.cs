@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 using DynamicScrollView;
 using UnityEngine;
 
 namespace DynamicScrollViewDemo
 {
-    public class DynamicScrollDemoSceneUI : MonoBehaviour
+    internal sealed class DynamicScrollDemoSceneUI : MonoBehaviour
     {
         [SerializeField] private DynamicScrollRect _rect;
         [SerializeField] private int _itemCount = 50;
@@ -13,14 +12,14 @@ namespace DynamicScrollViewDemo
         {
             Application.targetFrameRate = 60;
 
-            var contentDatas = new List<DynamicScrollItemData>();
+            var contentData = new IDynamicScrollItemData[_itemCount];
 
-            for (var i = 0; i < _itemCount; i++)
+            for (var i = 0; i < contentData.Length; i++)
             {
-                contentDatas.Add(new DynamicScrollItemData(i));
+                contentData[i] = new DynamicScrollItemDataDemo(i);
             }
 
-            _rect.Init(contentDatas);
+            _rect.Init(contentData);
         }
     }
 }

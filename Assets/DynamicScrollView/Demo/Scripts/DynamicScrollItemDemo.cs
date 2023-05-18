@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace DynamicScrollViewDemo
 {
-    public class DynamicScrollItemDemo : DynamicScrollItem<DynamicScrollItemData>
+    internal sealed class DynamicScrollItemDemo : DynamicScrollItem<DynamicScrollItemDataDemo>
     {
         [SerializeField] private DynamicScrollRect _dynamicScroll;
         [SerializeField] private Text _text;
@@ -14,10 +14,9 @@ namespace DynamicScrollViewDemo
             _dynamicScroll.StartFocus(this);
         }
 
-        protected override void OnInit(DynamicScrollItemData data)
+        protected override void OnInit(DynamicScrollItemDataDemo data)
         {
             _text.text = data.Index.ToString();
-            base.OnInit(data);
         }
     }
 }

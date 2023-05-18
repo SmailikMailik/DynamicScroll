@@ -28,7 +28,7 @@ namespace DynamicScrollView
         public Action<DynamicScrollItem> ItemDeactivated { get; set; }
 
         public DynamicScrollRect DynamicScrollRect { get; private set; }
-        public List<DynamicScrollItemData> ContentData { get; private set; }
+        public IDynamicScrollItemData[] ContentData { get; private set; }
 
         public float ItemWidth { get; private set; }
         public float ItemHeight { get; private set; }
@@ -40,7 +40,7 @@ namespace DynamicScrollView
             _referenceItem.gameObject.SetActive(false);
         }
 
-        public void Init(DynamicScrollRect dynamicScrollRect, List<DynamicScrollItemData> contentData)
+        public void Init(DynamicScrollRect dynamicScrollRect, IDynamicScrollItemData[] contentData)
         {
             DynamicScrollRect = dynamicScrollRect;
             ContentData = contentData;
@@ -66,7 +66,7 @@ namespace DynamicScrollView
 
         public bool CanAddNewItemIntoTail()
         {
-            return HasActivatedItems() && _activatedItems[^1].Index < ContentData.Count - 1;
+            return HasActivatedItems() && _activatedItems[^1].Index < ContentData.Length - 1;
         }
 
         public Vector2 GetFirstItemPos()
@@ -241,7 +241,7 @@ namespace DynamicScrollView
 
             var itemIndex = _activatedItems[^1].Index + 1;
 
-            if (itemIndex == ContentData.Count)
+            if (itemIndex == ContentData.Length)
                 return;
 
             ActivateItem(itemIndex);

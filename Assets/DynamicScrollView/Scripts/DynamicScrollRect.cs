@@ -61,7 +61,7 @@ namespace DynamicScrollView
             base.OnDestroy();
         }
 
-        public void Init(List<DynamicScrollItemData> contentData)
+        public void Init(IDynamicScrollItemData[] contentData)
         {
             _content.Init(this, contentData);
         }

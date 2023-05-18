@@ -3,9 +3,9 @@
 namespace DynamicScrollView
 {
     public class DynamicScrollItem<T> : DynamicScrollItem
-        where T : DynamicScrollItemData
+        where T : IDynamicScrollItemData
     {
-        public sealed override void Init(int index, Vector2 gridPos, DynamicScrollItemData data)
+        public sealed override void Init(int index, Vector2 gridPos, IDynamicScrollItemData data)
         {
             Index = index;
             GridIndex = gridPos;
@@ -24,7 +24,7 @@ namespace DynamicScrollView
 
         public RectTransform RectTransform => transform as RectTransform;
 
-        public abstract void Init(int index, Vector2 gridPos, DynamicScrollItemData data);
+        public abstract void Init(int index, Vector2 gridPos, IDynamicScrollItemData data);
 
         public void Activate()
         {
@@ -42,13 +42,5 @@ namespace DynamicScrollView
         protected virtual void OnDeactivate() { }
     }
 
-    public class DynamicScrollItemData
-    {
-        public DynamicScrollItemData(int index)
-        {
-            Index = index;
-        }
-
-        public int Index { get; }
-    }
+    public interface IDynamicScrollItemData { }
 }
