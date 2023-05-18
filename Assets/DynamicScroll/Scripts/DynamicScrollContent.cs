@@ -10,11 +10,14 @@ namespace DynamicScroll
         [SerializeField] private DynamicScrollItem _referenceItem;
         [SerializeField] private Vector2 _spacing = Vector2.zero;
 
-        [Tooltip("It will fill content rect in main axis(horizontal or vertical) automatically. Simply ignores _fixedItemCount")]
+        [Tooltip("It will fill content rect in main axis(horizontal or vertical) automatically. Simply ignores _maxItemCount")]
         [SerializeField] private bool _fillContent;
 
-        [Tooltip("If scroll is vertical it is item count in each row vice versa for horizontal")]
-        [Min(1)] [SerializeField] private int _fixedItemCount = 1;
+        [Tooltip("Max rows for horizontal or columns for vertical. If _fillContent is true, value setuped automatically")]
+        [Min(1)] [SerializeField] private int _maxItemCount = 1;
+
+        [Tooltip("Items loaded after last visible row for vertical or column for horizontal")]
+        [Min(0)] [SerializeField] private int _extraItemCount;
 
         public Vector2 Spacing => _spacing;
 
@@ -63,7 +66,7 @@ namespace DynamicScroll
 
         public void AddIntoHead()
         {
-            for (var i = 0; i < _fixedItemCount; i++)
+            for (var i = 0; i < _maxItemCount; i++)
             {
                 AddItemToHead();
             }
@@ -71,7 +74,7 @@ namespace DynamicScroll
 
         public void AddIntoTail()
         {
-            for (var i = 0; i < _fixedItemCount; i++)
+            for (var i = 0; i < _maxItemCount; i++)
             {
                 AddItemToTail();
             }
@@ -170,31 +173,32 @@ namespace DynamicScroll
         private Vector2Int CalculateInitialGridSize()
         {
             var contentSize = DynamicScrollRect.content.rect.size;
+            var extraItemCount = _extraItemCount + 1;
 
             if (DynamicScrollRect.vertical)
             {
-                var verticalItemCount = 4 + (int)(contentSize.y / (ItemHeight + _spacing.y));
+                var verticalItemCount = extraItemCount + (int)(contentSize.y / (ItemHeight + _spacing.y));
 
                 if (_fillContent)
                 {
                     var horizontalItemCount = (int)((contentSize.x + _spacing.x) / (ItemWidth + _spacing.x));
-                    _fixedItemCount = horizontalItemCount;
+                    _maxItemCount = horizontalItemCount;
                 }
 
-                return new Vector2Int(_fixedItemCount, verticalItemCount);
+                return new Vector2Int(_maxItemCount, verticalItemCount);
             }
 
             if (DynamicScrollRect.horizontal)
             {
-                var horizontalItemCount = 4 + (int)(contentSize.x / (ItemWidth + _spacing.x));
+                var horizontalItemCount = extraItemCount + (int)(contentSize.x / (ItemWidth + _spacing.x));
 
                 if (_fillContent)
                 {
                     var verticalItemCount = (int)((contentSize.y + _spacing.y) / (ItemHeight + _spacing.y));
-                    _fixedItemCount = verticalItemCount;
+                    _maxItemCount = verticalItemCount;
                 }
 
-                return new Vector2Int(horizontalItemCount, _fixedItemCount);
+                return new Vector2Int(horizontalItemCount, _maxItemCount);
             }
 
             return Vector2Int.zero;
@@ -302,8 +306,8 @@ namespace DynamicScroll
 
         private Vector2 GetGridPosition(int itemIndex)
         {
-            var col = itemIndex / _fixedItemCount;
-            var row = itemIndex - (col * _fixedItemCount);
+            var col = itemIndex / _maxItemCount;
+            var row = itemIndex - (col * _maxItemCount);
 
             if (DynamicScrollRect.vertical) return new Vector2(row, col);
             if (DynamicScrollRect.horizontal) return new Vector2(col, row);
@@ -316,6 +320,6 @@ namespace DynamicScroll
             -gridPosition.y * ItemHeight - gridPosition.y * _spacing.y
         );
 
-        private bool HasActivatedItems() => _activatedItems is {Count: > 0};
+        private bool HasActivatedItems() => _activatedItems is { Count: > 0 };
     }
 }
